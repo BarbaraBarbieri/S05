@@ -42,12 +42,15 @@ const eventos = [
 ];
 
 const carousel = document.querySelector('.carousel');
+const nextBtn = document.getElementById('nextBtn');
+const prevBtn = document.getElementById('prevBtn');
 
-function renderizarCards() {
-    eventos.forEach(event => {
-        const card = document.createElement('div');
-        card.classList.add('card');
-        card.innerHTML = `
+let index = 0;
+let autoSlide;
+
+function createCards() {
+    carousel.innerHTML = eventos.map(event => `
+        <div class="card">
             <img src="${event.image}" alt="${event.title}">
             <div class="info">
                 <h3>${event.title}</h3>
@@ -57,9 +60,47 @@ function renderizarCards() {
                     <span class="material-symbols-outlined icon">pin_drop</span> ${event.location}
                 </p>
             </div>
-        `;
-        carousel.appendChild(card);
-    });
+        </div>
+    `).join('');
 }
 
-document.addEventListener("DOMContentLoaded", renderizarCards);
+function updateCarousel() {
+    carousel.style.transform = `translateX(-${index * 100}%)`;
+}
+
+function nextCard() {
+    index = (index + 1) % eventos.length;
+    updateCarousel();
+}
+
+function prevCard() {
+    index = (index - 1 + eventos.length) % eventos.length;
+    updateCarousel();
+}
+
+function startAutoSlide() {
+    autoSlide = setInterval(nextCard, 5000);
+}
+
+function stopAutoSlide() {
+    clearInterval(autoSlide);
+}
+
+nextBtn.addEventListener('click', nextCard);
+prevBtn.addEventListener('click', prevCard);
+carousel.addEventListener('mouseenter', stopAutoSlide);
+carousel.addEventListener('mouseleave', startAutoSlide);
+
+let startX;
+carousel.addEventListener('touchstart', (e) => startX = e.touches[0].clientX);
+carousel.addEventListener('touchend', (e) => {
+    let endX = e.changedTouches[0].clientX;
+    if (startX - endX > 50) nextCard();
+    if (endX - startX > 50) prevCard();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    createCards();
+    updateCarousel();
+    startAutoSlide();
+});
